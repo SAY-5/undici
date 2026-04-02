@@ -36,11 +36,19 @@ jobs:
         with:
           persist-credentials: true
 
+      - name: Validate release branch
+        run: |
+          if [ '${{ github.ref_name }}' != 'v7.x' ]; then
+            echo 'This workflow must run from v7.x (current ref: ${{ github.ref_name }}).'
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         id: setup-node
         with:
           node-version: 'lts/*'
+
       - name: Git Config
         id: git-config
         run: |
@@ -63,7 +71,7 @@ jobs:
         id: create-pr
         with:
           script: |
-            const defaultBranch = "${{ github.event.repository.default_branch }}"
-            const versionTag = "v${{ steps.bump.outputs.version }}"
-            const commitHash = "${{ github.sha }}"
-            await require('./scripts/release').generatePr({ github, context, defaultBranch, versionTag, commitHash })
+            const releaseBranch = '${{ github.ref_name }}'
+            const versionTag = 'v${{ steps.bump.outputs.version }}'
+            const commitHash = '${{ github.sha }}'
+            await require('./scripts/release').generatePr({ github, context, releaseBranch, versionTag, commitHash })

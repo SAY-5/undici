@@ -3,7 +3,7 @@ name: Release undici and undici-types on NPM and create GitHub Release
 on:
   push:
     branches:
-     - main
+      - v7.x
     paths:
       - package.json
 
@@ -28,7 +28,7 @@ jobs:
           result-encoding: string
           script: |
             const { owner, repo } = context.repo
-            const version = require("./package.json").version
+            const version = require('./package.json').version
             const versionTag = `v${version}`
 
             const { data: releases } = await github.rest.repos.listReleases({
@@ -45,7 +45,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: determine-release-version
-    if: ${{ startsWith(needs.determine-release-version.outputs.release-version, 'v') }}
+    if: ${{ github.ref_name == 'v7.x' && startsWith(needs.determine-release-version.outputs.release-version, 'v') }}
 
     permissions:
       contents: write
@@ -75,7 +75,7 @@ jobs:
         id: install-dependencies
 
       - name: Publish undici on NPM
-        run: npm publish --access public
+        run: npm publish --access public --tag seven
         id: npm-publish-undici
 
       - name: Generate Types Package
@@ -83,7 +83,7 @@ jobs:
         id: generate-types-package
 
       - name: Publish undici-types on NPM
-        run: npm publish
+        run: npm publish --tag seven
         id: npm-publish-undici-types
         working-directory: './types'
 
@@ -92,7 +92,7 @@ jobs:
         id: create-gh-release
         with:
           script: |
-            const defaultBranch = "${{ github.event.repository.default_branch }}"
-            const versionTag = "${{ needs.determine-release-version.outputs.release-version }}"
-            const commitHash = "${{ github.sha }}"
-            await require('./scripts/release').release({ github, context, defaultBranch, versionTag, commitHash })
+            const releaseBranch = '${{ github.ref_name }}'
+            const versionTag = '${{ needs.determine-release-version.outputs.release-version }}'
+            const commitHash = '${{ github.sha }}'
+            await require('./scripts/release').release({ github, context, releaseBranch, versionTag, commitHash })
