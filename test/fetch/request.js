@@ -2,6 +2,7 @@
 
 'use strict'
 
+const { setMaxListeners } = require('node:events')
 const { test } = require('node:test')
 const {
   Request,
@@ -383,6 +384,34 @@ test('cloned request signal stays connected after garbage collection', async (t)
   t.assert.strictEqual(await aborted, true)
   t.assert.strictEqual(request.signal.aborted, true)
   t.assert.strictEqual(request.signal.reason, 'gwak')
+})
+
+test('reusing a controller across transient requests does not emit a warning', async (t) => {
+  if (typeof global.gc !== 'function') {
+    t.skip('gc is not available. Run with --expose-gc.')
+    return
+  }
+
+  let emittedWarning = ''
+  function onWarning (warning) {
+    emittedWarning = warning
+  }
+
+  process.on('warning', onWarning)
+  t.after(() => {
+    process.off('warning', onWarning)
+  })
+
+  const controller = new AbortController()
+  setMaxListeners(20, controller.signal)
+
+  for (let i = 0; i < 200; ++i) {
+    const request = new Request('http://asd', { signal: controller.signal })
+    request.signal.addEventListener('abort', () => {}, { once: true })
+    await forceGarbageCollection(1)
+  }
+
+  t.assert.strictEqual(emittedWarning, '')
 })
 
 test('Passing headers in init', async (t) => {
