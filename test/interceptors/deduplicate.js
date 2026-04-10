@@ -154,6 +154,55 @@ describe('Deduplicate Interceptor', () => {
     strictEqual(body2, 'response for br')
   })
 
+  test('does not deduplicate requests when header delimiters would previously collide', async () => {
+    let requestsToOrigin = 0
+    const server = createServer({ joinDuplicateHeaders: true }, async (req, res) => {
+      requestsToOrigin++
+      await sleep(100)
+      res.end(`a=${req.headers.a};b=${req.headers.b ?? ''}`)
+    }).listen(0)
+
+    const client = new Client(`http://localhost:${server.address().port}`)
+      .compose(interceptors.deduplicate())
+
+    after(async () => {
+      server.close()
+      await client.close()
+    })
+
+    await once(server, 'listening')
+
+    const [res1, res2] = await Promise.all([
+      client.request({
+        origin: 'localhost',
+        method: 'GET',
+        path: '/',
+        headers: {
+          a: 'x:b=y'
+        }
+      }),
+      client.request({
+        origin: 'localhost',
+        method: 'GET',
+        path: '/',
+        headers: {
+          a: 'x',
+          b: 'y'
+        }
+      })
+    ])
+
+    strictEqual(requestsToOrigin, 2)
+
+    const [body1, body2] = await Promise.all([
+      res1.body.text(),
+      res2.body.text()
+    ])
+
+    strictEqual(body1, 'a=x:b=y;b=')
+    strictEqual(body2, 'a=x;b=y')
+  })
+
   test('does not deduplicate requests with different paths', async () => {
     let requestsToOrigin = 0
     const server = createServer({ joinDuplicateHeaders: true }, async (req, res) => {

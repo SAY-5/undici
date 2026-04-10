@@ -2,7 +2,7 @@
 
 const { tspl } = require('@matteo.collina/tspl')
 const { test } = require('node:test')
-const { normalizeHeaders } = require('../../lib/util/cache')
+const { makeDeduplicationKey, normalizeHeaders } = require('../../lib/util/cache')
 
 test('normalizeHeaders handles plain object headers with polluted Object.prototype[Symbol.iterator]', (t) => {
   const { strictEqual } = tspl(t, { plan: 2 })
@@ -41,4 +41,29 @@ test('normalizeHeaders handles headers from Map', (t) => {
   })
 
   strictEqual(headers['x-test'], 'ok')
+})
+
+test('makeDeduplicationKey does not collide when headers contain delimiters', (t) => {
+  const { strictEqual } = tspl(t, { plan: 1 })
+
+  const keyWithDelimitedValue = makeDeduplicationKey({
+    origin: 'https://example.com',
+    method: 'GET',
+    path: '/',
+    headers: {
+      a: 'x:b=y'
+    }
+  })
+
+  const keyWithExtraHeader = makeDeduplicationKey({
+    origin: 'https://example.com',
+    method: 'GET',
+    path: '/',
+    headers: {
+      a: 'x',
+      b: 'y'
+    }
+  })
+
+  strictEqual(keyWithDelimitedValue === keyWithExtraHeader, false)
 })
