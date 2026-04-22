@@ -1,0 +1,143 @@
+name: Benchmarks
+
+on:
+  push:
+    branches:
+     - main
+     - current
+     - next
+     - 'v*'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark_current:
+    name: benchmark current
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.base_ref }}
+      - name: Setup Node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 'lts/*'
+      - name: Install Modules for undici
+        run: npm i --ignore-scripts --omit=dev
+      - name: Install Modules for Benchmarks
+        run: npm i
+        working-directory: ./benchmarks
+      - name: Run Benchmark
+        run: npm run bench
+        working-directory: ./benchmarks
+
+  benchmark_branch:
+    name: benchmark branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 'lts/*'
+      - name: Install Modules for undici
+        run: npm i --ignore-scripts --omit=dev
+      - name: Install Modules for Benchmarks
+        run: npm i
+        working-directory: ./benchmarks
+      - name: Run Benchmark
+        run: npm run bench
+        working-directory: ./benchmarks
+
+  benchmark_post_current:
+    name: benchmark (sending data) current
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.base_ref }}
+      - name: Setup Node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 'lts/*'
+      - name: Install Modules for undici
+        run: npm i --ignore-scripts --omit=dev
+      - name: Install Modules for Benchmarks
+        run: npm i
+        working-directory: ./benchmarks
+      - name: Run Benchmark
+        run: npm run bench-post
+        working-directory: ./benchmarks
+
+  benchmark_post_branch:
+    name: benchmark (sending data) branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 'lts/*'
+      - name: Install Modules for undici
+        run: npm i --ignore-scripts --omit=dev
+      - name: Install Modules for Benchmarks
+        run: npm i
+        working-directory: ./benchmarks
+      - name: Run Benchmark
+        run: npm run bench-post
+        working-directory: ./benchmarks
+
+  benchmark_current_h2:
+    name: benchmark current h2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.base_ref }}
+      - name: Setup Node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 'lts/*'
+      - name: Install Modules for undici
+        run: npm i --ignore-scripts --omit=dev
+      - name: Install Modules for Benchmarks
+        run: npm i
+        working-directory: ./benchmarks
+      - name: Run Benchmark
+        run: npm run bench:h2
+        working-directory: ./benchmarks
+
+  benchmark_branch_h2:
+    name: benchmark branch h2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 'lts/*'
+      - name: Install Modules for undici
+        run: npm i --ignore-scripts --omit=dev
+      - name: Install Modules for Benchmarks
+        run: npm i
+        working-directory: ./benchmarks
+      - name: Run Benchmark
+        run: npm run bench:h2
+        working-directory: ./benchmarks
